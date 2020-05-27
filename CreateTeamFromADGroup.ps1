@@ -27,6 +27,7 @@ Import-Module ActiveDirectory
 Import-Module -UseWindowsPowerShell AzureAD
 #Connect-AzureAD
 #Connect-MicrosoftTeams
+#Connect-ExchangeOnline
 
 # Import CSV
 $CSV = import-csv .\TeamsGroupSync.csv
@@ -43,16 +44,19 @@ foreach ($ADGroup in $ADGroups) {
         # Group does not exist in Azure
         Write-Output "Creating Office 365 Group"
         
+        # Create email string - Strip out special charactars
+        $O365GroupEmail = $O365GroupName -replace '[#?.\\\/\ ]','-' -replace "'" -replace '"' -replace '[\(\)\[\]\{\}]'
+
         # Create O365 Group
-        CODE TO CREATE GROUP
+        New-AzureADGroup -DisplayName $O365GroupName -MailEnabled $true -MailNickName $O365GroupEmail
         
         $O365Group = Get-AzureADGroup -SearchString $O365GroupName
         
         # Disable Welcome Message
-        
+        Set-UnifiedGroup -Identity $O365GroupName -UnifiedGroupWelcomeMessageEnable:$false
         
         # Hide from GAL
-        
+        Set-UnifiedGroup -Identity $O365GroupName -HiddenFromAddressListsEnabled $true
         
         # Set description to be same as AD group
         
@@ -64,7 +68,7 @@ foreach ($ADGroup in $ADGroups) {
         
         
         # Create Basic locked down Team from O365 Group
-        new-team -GroupID $O365Group.ObjectID  -AllowGiphy $false -AllowStickersAndMemes $false -AllowCustomMemes $false -AllowGuestCreateUpdateChannels $false -AllowGuestDeleteChannels $false -AllowCreateUpdateChannels $false -AllowDeleteChannels $false -AllowAddRemoveApps $false -AllowCreateUpdateRemoveTabs $false -AllowCreateUpdateRemoveConnectors $false -ShowInTeamsSearchAndSuggestions $false -AllowOwnerDeleteMessages $true 
+        #new-team -GroupID $O365Group.ObjectID  -AllowGiphy $false -AllowStickersAndMemes $false -AllowCustomMemes $false -AllowGuestCreateUpdateChannels $false -AllowGuestDeleteChannels $false -AllowCreateUpdateChannels $false -AllowDeleteChannels $false -AllowAddRemoveApps $false -AllowCreateUpdateRemoveTabs $false -AllowCreateUpdateRemoveConnectors $false -ShowInTeamsSearchAndSuggestions $false -AllowOwnerDeleteMessages $true 
         
         # Add new AD group/O365 group pair to CSV
         $newRow = New-Object PSObject -Property @{ ADGroup = $ADGroup.Name ; O365Group = $O365GroupName }
