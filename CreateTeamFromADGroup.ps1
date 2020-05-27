@@ -48,7 +48,7 @@ foreach ($ADGroup in $ADGroups) {
         $O365GroupEmail = $O365GroupName -replace '[#?.\\\/\ ]','-' -replace "'" -replace '"' -replace '[\(\)\[\]\{\}]'
 
         # Create O365 Group
-        New-AzureADGroup -DisplayName $O365GroupName -MailEnabled $true -MailNickName $O365GroupEmail
+        New-AzureADGroup -DisplayName $O365GroupName -MailEnabled $true -MailNickName $O365GroupEmail -Description $ADGroup.Description
         
         $O365Group = Get-AzureADGroup -SearchString $O365GroupName
         
@@ -57,9 +57,6 @@ foreach ($ADGroup in $ADGroups) {
         
         # Hide from GAL
         Set-UnifiedGroup -Identity $O365GroupName -HiddenFromAddressListsEnabled $true
-        
-        # Set description to be same as AD group
-        
         
         # Add members of AD group as owners
         
