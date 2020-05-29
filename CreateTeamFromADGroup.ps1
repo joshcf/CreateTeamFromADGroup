@@ -19,7 +19,7 @@
 
 # Variables
 
-$ADGroupsOU = "OU=Teams Groups,OU=Groups,OU=_Bedales,DC=bedales,DC=org,DC=uk"
+$ADGroupsOU = ""
 
 
 #  Load Modules
@@ -58,10 +58,22 @@ foreach ($ADGroup in $ADGroups) {
         # Hide from GAL
         Set-UnifiedGroup -Identity $O365GroupName -HiddenFromAddressListsEnabled $true
         
-        # Add members of AD group as owners
-        
-        
-        # Add members of AD group as members
+        # Get list of members of AD group
+        # For each member:
+        #   Get upn
+        #   Find user in Azure AD
+        #   Add user to O365 group as member
+        #   Add user to O365 AD group as owner
+
+        $Users = Get-ADGroupMember -Identity $ADGroup.Name
+        foreach ($User in $Users) {
+            $GUID = $User.objectGUID
+            $UPN = (Get-ADUser -Identity $GUID).UserPrincipalName
+            $AzureADUser = Get-AzureADUser -SearchString $UPN
+            Add-AzureADGroupMember -ObjectId $O365Group.ObjectID -RefObjectId $AzureADUser.ObjectID
+            Add-AzureADGroupOwner - ObjectId $O365Group.ObjectID -RefObjectId $AzureADUser.ObjectID
+
+        }
         
         
         # Create Basic locked down Team from O365 Group
